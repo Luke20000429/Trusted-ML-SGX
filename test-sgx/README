@@ -1,0 +1,11 @@
+### To check if your hardware support SGX and FLC
+Compile and run `test-sgx.c` 
+```
+gcc test-sgx.c -o test-sgx
+./test-sgx
+```
+Look for output 
+```
+sgx available: 1
+sgx launch control: 1
+```
