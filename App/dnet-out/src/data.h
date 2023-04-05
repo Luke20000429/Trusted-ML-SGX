@@ -9,7 +9,7 @@
 #include "tree.h"
 
 
-#define CIFAR_DATA_PATH "/home/ubuntu/xxx/sgx-dnet/App/dnet-out/data/cifar/cifar-10-batches-bin/data_batch_%d.bin"
+#define CIFAR_DATA_PATH "/home/liuxs/workarea/sgx-dnet/App/dnet-out/data/cifar/cifar-10-batches-bin/data_batch_%d.bin"
 
 static inline float distance_from_edge(int x, int max)
 {

@@ -49,8 +49,10 @@ void ocall_open_file(const char *filename, flag oflag)
 #else
             read_fp = fopen(filename, "rb");
 #endif
-
-            printf("Opened file in read only mode\n");
+            if (read_fp)
+                printf("Opened file in read only mode\n");
+            else 
+                printf("Fail to open %s in read only mode\n", filename);
             break;
         case O_WRONLY:
 #ifdef DISABLE_CACHE
@@ -82,6 +84,7 @@ void ocall_open_file(const char *filename, flag oflag)
     {
         printf("Problem with file pointer..\n");
     }
+    
 }
 
 /**

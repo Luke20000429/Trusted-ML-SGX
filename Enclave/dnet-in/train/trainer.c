@@ -4,9 +4,9 @@
 #include "trainer.h"
 #include "checks.h"
 
-#define CIFAR_WEIGHTS "/home/ubuntu/xxx/sgx-dnet/App/dnet-out/backup/cifar.weights"
-#define TINY_WEIGHTS "/home/ubuntu/xxx/sgx-dnet/App/dnet-out/backup/tiny.weights"
-#define MNIST_WEIGHTS "/home/ubuntu/xxx/sgx-dnet/App/dnet-out/backup/mnist.weights"
+#define CIFAR_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/cifar.weights"
+#define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/tiny.weights"
+#define MNIST_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/mnist.weights"
 
 //global network model
 //network *net = NULL;
@@ -298,7 +298,7 @@ void test_fio()
     network *net = load_network(cfgfile, weightfile, 0);
     printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
 
-    char *backup_directory = "/home/ubuntu/xxx/sgx-dnet/backup/";
+    char *backup_directory = "/home/liuxs/workarea/sgx-dnet/backup/";
     int classes = 10;
     int N = 50000;
 

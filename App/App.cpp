@@ -24,7 +24,7 @@ data training_data, test_data;
  */
 #define CIFAR_CFG_FILE "./App/dnet-out/cfg/cifar.cfg"
 #define CIFAR_TEST_DATA "./App/dnet-out/data/cifar/cifar-10-batches-bin/test_batch.bin"
-#define TINY_IMAGE "./App/dnet-out/data/person.jpg"
+#define TINY_IMAGE "./App/dnet-out/data/eagle.jpg"
 #define TINY_CFG "./App/dnet-out/cfg/tiny.cfg"
 #define DATA_CFG "./App/dnet-out/data/tiny.data"
 #define MNIST_TRAIN_IMAGES "./App/dnet-out/data/mnist/train-images-idx3-ubyte"
@@ -92,6 +92,7 @@ void test_cifar(char *cfgfile)
  */
 void test_tiny(char *cfgfile)
 {
+    printf("Classification starts..\n");
     //read network config file
     list *sections = read_cfg(cfgfile);
     //read labels
@@ -105,9 +106,10 @@ void test_tiny(char *cfgfile)
     char *input = buff;
     strncpy(input, file, 256);
     image im = load_image_color(input, 0, 0);
-
+    printf("Enclave starts..\n");
     //classify image in enclave
     ecall_classify(global_eid, sections, plist, &im);
+    printf("Enclave ends..\n");
     //free data
     free_image(im);
     printf("Classification complete..\n");
@@ -137,7 +139,7 @@ void train_mnist(char *cfgfile)
  */
 void test_mnist(char *cfgfile)
 {
-
+    printf("Mnist testing starts.\n");
     std::string img_path = MNIST_TEST_IMAGES;
     std::string label_path = MNIST_TEST_LABELS;
     data test = load_mnist_images(img_path);
@@ -191,9 +193,9 @@ int SGX_CDECL main(int argc, char *argv[])
 
     //train_cifar(CIFAR_CFG_FILE);
     //test_cifar(CIFAR_CFG_FILE);
-    //test_tiny(TINY_CFG);
+    test_tiny(TINY_CFG);
     //train_mnist(MNIST_CFG);
-    test_mnist(MNIST_CFG);
+    // test_mnist(MNIST_CFG);
 
     /*  
     for (int i = 0; i < NUM_THREADS; i++)
