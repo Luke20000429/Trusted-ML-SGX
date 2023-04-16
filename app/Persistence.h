@@ -34,6 +34,10 @@ struct Persistence {
     return 0;
   }
 
+  const size_t size() const {
+    return std::filesystem::file_size(path_);
+  }
+
   const bool exists() const {
     return std::filesystem::exists(path_);
   }

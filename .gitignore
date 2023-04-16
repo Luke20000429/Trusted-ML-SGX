@@ -7,3 +7,4 @@ enclave.token
 provision
 unseal
 .vscode
+*.weights
