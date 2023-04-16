@@ -37,6 +37,7 @@ int load(const Persistence &persistence) {
     return validation_result;
   }
 
+  // NOTE: binary files may contains \0, don't use strlen
   std::cout << persistence.path() << " unsealed size: " << unsealed_size << std::endl;
 
   Persistence unsealed_data{std::filesystem::path{"unsealed_data.weights"}};
