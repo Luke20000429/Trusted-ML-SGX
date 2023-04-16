@@ -65,6 +65,18 @@ void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_free_sec, (section* sec));
 #define OCALL_FREE_LIST_DEFINED__
 void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_free_list, (list* list));
 #endif
+#ifndef PTHREAD_WAIT_TIMEOUT_OCALL_DEFINED__
+#define PTHREAD_WAIT_TIMEOUT_OCALL_DEFINED__
+int SGX_UBRIDGE(SGX_CDECL, pthread_wait_timeout_ocall, (unsigned long long waiter, unsigned long long timeout));
+#endif
+#ifndef PTHREAD_CREATE_OCALL_DEFINED__
+#define PTHREAD_CREATE_OCALL_DEFINED__
+int SGX_UBRIDGE(SGX_CDECL, pthread_create_ocall, (unsigned long long self));
+#endif
+#ifndef PTHREAD_WAKEUP_OCALL_DEFINED__
+#define PTHREAD_WAKEUP_OCALL_DEFINED__
+int SGX_UBRIDGE(SGX_CDECL, pthread_wakeup_ocall, (unsigned long long waiter));
+#endif
 
 sgx_status_t empty_ecall(sgx_enclave_id_t eid);
 sgx_status_t ecall_trainer(sgx_enclave_id_t eid, list* sections, data* training_data, int pmem);

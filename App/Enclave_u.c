@@ -76,6 +76,22 @@ typedef struct ms_ocall_free_list_t {
 	list* ms_list;
 } ms_ocall_free_list_t;
 
+typedef struct ms_pthread_wait_timeout_ocall_t {
+	int ms_retval;
+	unsigned long long ms_waiter;
+	unsigned long long ms_timeout;
+} ms_pthread_wait_timeout_ocall_t;
+
+typedef struct ms_pthread_create_ocall_t {
+	int ms_retval;
+	unsigned long long ms_self;
+} ms_pthread_create_ocall_t;
+
+typedef struct ms_pthread_wakeup_ocall_t {
+	int ms_retval;
+	unsigned long long ms_waiter;
+} ms_pthread_wakeup_ocall_t;
+
 static sgx_status_t SGX_CDECL Enclave_ocall_open_file(void* pms)
 {
 	ms_ocall_open_file_t* ms = SGX_CAST(ms_ocall_open_file_t*, pms);
@@ -171,11 +187,35 @@ static sgx_status_t SGX_CDECL Enclave_ocall_free_list(void* pms)
 	return SGX_SUCCESS;
 }
 
+static sgx_status_t SGX_CDECL Enclave_pthread_wait_timeout_ocall(void* pms)
+{
+	ms_pthread_wait_timeout_ocall_t* ms = SGX_CAST(ms_pthread_wait_timeout_ocall_t*, pms);
+	ms->ms_retval = pthread_wait_timeout_ocall(ms->ms_waiter, ms->ms_timeout);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_pthread_create_ocall(void* pms)
+{
+	ms_pthread_create_ocall_t* ms = SGX_CAST(ms_pthread_create_ocall_t*, pms);
+	ms->ms_retval = pthread_create_ocall(ms->ms_self);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_pthread_wakeup_ocall(void* pms)
+{
+	ms_pthread_wakeup_ocall_t* ms = SGX_CAST(ms_pthread_wakeup_ocall_t*, pms);
+	ms->ms_retval = pthread_wakeup_ocall(ms->ms_waiter);
+
+	return SGX_SUCCESS;
+}
+
 static const struct {
 	size_t nr_ocall;
-	void * table[12];
+	void * table[15];
 } ocall_table_Enclave = {
-	12,
+	15,
 	{
 		(void*)Enclave_ocall_open_file,
 		(void*)Enclave_ocall_close_file,
@@ -189,6 +229,9 @@ static const struct {
 		(void*)Enclave_sgx_thread_set_multiple_untrusted_events_ocall,
 		(void*)Enclave_ocall_free_sec,
 		(void*)Enclave_ocall_free_list,
+		(void*)Enclave_pthread_wait_timeout_ocall,
+		(void*)Enclave_pthread_create_ocall,
+		(void*)Enclave_pthread_wakeup_ocall,
 	}
 };
 sgx_status_t empty_ecall(sgx_enclave_id_t eid)

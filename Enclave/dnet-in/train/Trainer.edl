@@ -6,14 +6,13 @@
 
  enclave{
 
+    trusted {
+        /* pmem = 1 ==> there is a saved net in pmem; 0 otherwise */
+        public void ecall_trainer([user_check]list* sections,[user_check] data* training_data, int pmem);
+        public void ecall_tester([user_check]list* sections,[user_check] data* test_data, int pmem);
+        public void ecall_classify([user_check]list* sections,[user_check]list* labels, [user_check]image* im);
 
-     trusted {
-         /* pmem = 1 ==> there is a saved net in pmem; 0 otherwise */
-         public void ecall_trainer([user_check]list* sections,[user_check] data* training_data, int pmem);
-         public void ecall_tester([user_check]list* sections,[user_check] data* test_data, int pmem);
-         public void ecall_classify([user_check]list* sections,[user_check]list* labels, [user_check]image* im);
-
-     };
+    };
 
     untrusted {
         void ocall_free_sec([user_check]section *sec);

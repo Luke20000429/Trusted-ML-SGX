@@ -24,8 +24,10 @@ data training_data, test_data;
  */
 #define CIFAR_CFG_FILE "./App/dnet-out/cfg/cifar.cfg"
 #define CIFAR_TEST_DATA "./App/dnet-out/data/cifar/cifar-10-batches-bin/test_batch.bin"
-#define TINY_IMAGE "./App/dnet-out/data/eagle.jpg"
-#define TINY_CFG "./App/dnet-out/cfg/tiny.cfg"
+#define TINY_IMAGE "./App/dnet-out/data/dog.jpg"
+// #define TINY_CFG "./App/dnet-out/cfg/tiny.cfg"
+#define TINY_CFG "./App/dnet-out/cfg/resnet152.cfg"
+// #define DATA_CFG "./App/dnet-out/data/tiny.data"
 #define DATA_CFG "./App/dnet-out/data/tiny.data"
 #define MNIST_TRAIN_IMAGES "./App/dnet-out/data/mnist/train-images-idx3-ubyte"
 #define MNIST_TRAIN_LABELS "./App/dnet-out/data/mnist/train-labels-idx1-ubyte"

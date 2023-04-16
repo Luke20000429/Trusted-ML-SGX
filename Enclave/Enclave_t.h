@@ -33,6 +33,9 @@ sgx_status_t SGX_CDECL sgx_thread_setwait_untrusted_events_ocall(int* retval, co
 sgx_status_t SGX_CDECL sgx_thread_set_multiple_untrusted_events_ocall(int* retval, const void** waiters, size_t total);
 sgx_status_t SGX_CDECL ocall_free_sec(section* sec);
 sgx_status_t SGX_CDECL ocall_free_list(list* list);
+sgx_status_t SGX_CDECL pthread_wait_timeout_ocall(int* retval, unsigned long long waiter, unsigned long long timeout);
+sgx_status_t SGX_CDECL pthread_create_ocall(int* retval, unsigned long long self);
+sgx_status_t SGX_CDECL pthread_wakeup_ocall(int* retval, unsigned long long waiter);
 
 #ifdef __cplusplus
 }

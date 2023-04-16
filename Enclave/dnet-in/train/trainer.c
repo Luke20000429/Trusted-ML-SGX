@@ -5,7 +5,7 @@
 #include "checks.h"
 
 #define CIFAR_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/cifar.weights"
-#define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/tiny.weights"
+#define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/resnet152.weights"
 #define MNIST_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/mnist.weights"
 
 //global network model
@@ -145,6 +145,7 @@ void ecall_classify(list *sections, list *labels, image *im)
      */
     sgx_lfence();
     classify_tiny(sections, labels, im, 5);
+    printf("Classify tiny finished!\n");
 }
 
 /**

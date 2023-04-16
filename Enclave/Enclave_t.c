@@ -102,6 +102,22 @@ typedef struct ms_ocall_free_list_t {
 	list* ms_list;
 } ms_ocall_free_list_t;
 
+typedef struct ms_pthread_wait_timeout_ocall_t {
+	int ms_retval;
+	unsigned long long ms_waiter;
+	unsigned long long ms_timeout;
+} ms_pthread_wait_timeout_ocall_t;
+
+typedef struct ms_pthread_create_ocall_t {
+	int ms_retval;
+	unsigned long long ms_self;
+} ms_pthread_create_ocall_t;
+
+typedef struct ms_pthread_wakeup_ocall_t {
+	int ms_retval;
+	unsigned long long ms_waiter;
+} ms_pthread_wakeup_ocall_t;
+
 static sgx_status_t SGX_CDECL sgx_empty_ecall(void* pms)
 {
 	sgx_status_t status = SGX_SUCCESS;
@@ -195,10 +211,13 @@ SGX_EXTERNC const struct {
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[12][4];
+	uint8_t entry_table[15][4];
 } g_dyn_entry_table = {
-	12,
+	15,
 	{
+		{0, 0, 0, 0, },
+		{0, 0, 0, 0, },
+		{0, 0, 0, 0, },
 		{0, 0, 0, 0, },
 		{0, 0, 0, 0, },
 		{0, 0, 0, 0, },
@@ -749,6 +768,122 @@ sgx_status_t SGX_CDECL ocall_free_list(list* list)
 	status = sgx_ocall(11, ms);
 
 	if (status == SGX_SUCCESS) {
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL pthread_wait_timeout_ocall(int* retval, unsigned long long waiter, unsigned long long timeout)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_pthread_wait_timeout_ocall_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_pthread_wait_timeout_ocall_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_pthread_wait_timeout_ocall_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_pthread_wait_timeout_ocall_t));
+	ocalloc_size -= sizeof(ms_pthread_wait_timeout_ocall_t);
+
+	if (memcpy_verw_s(&ms->ms_waiter, sizeof(ms->ms_waiter), &waiter, sizeof(waiter))) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+
+	if (memcpy_verw_s(&ms->ms_timeout, sizeof(ms->ms_timeout), &timeout, sizeof(timeout))) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+
+	status = sgx_ocall(12, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) {
+			if (memcpy_s((void*)retval, sizeof(*retval), &ms->ms_retval, sizeof(ms->ms_retval))) {
+				sgx_ocfree();
+				return SGX_ERROR_UNEXPECTED;
+			}
+		}
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL pthread_create_ocall(int* retval, unsigned long long self)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_pthread_create_ocall_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_pthread_create_ocall_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_pthread_create_ocall_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_pthread_create_ocall_t));
+	ocalloc_size -= sizeof(ms_pthread_create_ocall_t);
+
+	if (memcpy_verw_s(&ms->ms_self, sizeof(ms->ms_self), &self, sizeof(self))) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+
+	status = sgx_ocall(13, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) {
+			if (memcpy_s((void*)retval, sizeof(*retval), &ms->ms_retval, sizeof(ms->ms_retval))) {
+				sgx_ocfree();
+				return SGX_ERROR_UNEXPECTED;
+			}
+		}
+	}
+	sgx_ocfree();
+	return status;
+}
+
+sgx_status_t SGX_CDECL pthread_wakeup_ocall(int* retval, unsigned long long waiter)
+{
+	sgx_status_t status = SGX_SUCCESS;
+
+	ms_pthread_wakeup_ocall_t* ms = NULL;
+	size_t ocalloc_size = sizeof(ms_pthread_wakeup_ocall_t);
+	void *__tmp = NULL;
+
+
+	__tmp = sgx_ocalloc(ocalloc_size);
+	if (__tmp == NULL) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+	ms = (ms_pthread_wakeup_ocall_t*)__tmp;
+	__tmp = (void *)((size_t)__tmp + sizeof(ms_pthread_wakeup_ocall_t));
+	ocalloc_size -= sizeof(ms_pthread_wakeup_ocall_t);
+
+	if (memcpy_verw_s(&ms->ms_waiter, sizeof(ms->ms_waiter), &waiter, sizeof(waiter))) {
+		sgx_ocfree();
+		return SGX_ERROR_UNEXPECTED;
+	}
+
+	status = sgx_ocall(14, ms);
+
+	if (status == SGX_SUCCESS) {
+		if (retval) {
+			if (memcpy_s((void*)retval, sizeof(*retval), &ms->ms_retval, sizeof(ms->ms_retval))) {
+				sgx_ocfree();
+				return SGX_ERROR_UNEXPECTED;
+			}
+		}
 	}
 	sgx_ocfree();
 	return status;
