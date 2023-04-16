@@ -95,9 +95,9 @@ void gemm_nt(int M, int N, int K, float ALPHA,
         float *C, int ldc)
 {
     int i,j,k;
-   #ifdef SGX_OMP
+    #ifdef SGX_OMP
     #pragma omp parallel for
-   #endif
+    #endif
     for(i = 0; i < M; ++i){
         for(j = 0; j < N; ++j){
             register float sum = 0;

@@ -36,7 +36,8 @@ endif
 endif
 
 ifeq ($(SGX_DEBUG), 1)
-	SGX_COMMON_FLAGS += -O0 -g -DDET_SGX_DEBUG
+	# SGX_COMMON_FLAGS += -O0 -g -DDET_SGX_DEBUG
+	SGX_COMMON_FLAGS += -O3 -DDET_SGX_DEBUG ### NOTE: without O3 will result in both error and slow performance
 else
 	SGX_COMMON_FLAGS += -O2
 endif

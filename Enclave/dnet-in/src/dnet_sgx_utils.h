@@ -24,7 +24,7 @@
 #define INT_MAX RAND_MAX
 #define MAX_CHAR 4096
 
-//#define DNET_SGX_DEBUG //uncomment if you need more verbose output during training/debugging
+// #define DNET_SGX_DEBUG //uncomment if you need more verbose output during training/debugging
 #define SGX_OMP //OMP not used yet 
 
 #define PRINT_BLOCK()                    \

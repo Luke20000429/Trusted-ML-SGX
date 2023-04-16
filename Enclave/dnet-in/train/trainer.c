@@ -5,6 +5,7 @@
 #include "checks.h"
 
 #define CIFAR_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/cifar.weights"
+// #define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/tiny.weights"
 #define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/resnet152.weights"
 #define MNIST_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/mnist.weights"
 
