@@ -10,7 +10,7 @@
 
 /* For romulus */
 #define MAX_PATH FILENAME_MAX
-#define MAX_IMAGE 10
+#define MAX_IMAGE 30
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 static int stack_val = 10;
@@ -37,8 +37,8 @@ data training_data, test_data;
 
 #define IMAGENET_CFG_FILE "./App/dnet-out/cfg/resnet18.cfg"
 #define IMAGENET_TEST_DATA "./App/dnet-out/data/imagenet.data"
-// #define IMAGENET_IMAGE "./App/dnet-out/data/imagenet/imagenet.image.list"
-#define IMAGENET_IMAGE "App/dnet-out/data/dog.jpg"
+#define IMAGENET_IMAGES "./App/dnet-out/data/imagenet/imagenet.image.list"
+#define IMAGENET_IMAGE "./App/dnet-out/data/person.jpg"
 /* Thread function --> only for testing purposes */
 void thread_func()
 {
@@ -171,6 +171,7 @@ void test_imagenet(char *cfgfile)
     list *options = read_data_cfg(IMAGENET_TEST_DATA);
     char *name_list = option_find_str(options, "names", 0);
     list *plist = get_paths(name_list);
+
     image *im = (image *)calloc(MAX_IMAGE, sizeof(image));
 
 
@@ -178,13 +179,14 @@ void test_imagenet(char *cfgfile)
     char * line = NULL;
     size_t len = 256;
 
-    image_fp = fopen(IMAGENET_IMAGE, "r");
+    image_fp = fopen(IMAGENET_IMAGES, "r");
     if (image_fp == NULL)
         exit(EXIT_FAILURE);
 
-    for (int i = 0; i < MAX_IMAGE; i++) {
+    int i = 0;
+    for (i = 0; i < MAX_IMAGE; i++) {
         if (getline(&line, &len, image_fp) == -1) {
-            exit(1);
+            break;
         }
         size_t last_idx = strlen(line) - 1;
         if( line[last_idx] == '\n' ) {
@@ -195,15 +197,17 @@ void test_imagenet(char *cfgfile)
         char *input = buff;
         strncpy(input, line, 256);
         im[i] = load_image_color(input, 0, 0);
-        printf("Addr: %p", (void*)im[i].data);
+        // printf("Addr: %p", (void*)im[i].data);
     }
-    printf("Enclave starts..\n");
-    ecall_classify(global_eid, sections, plist, im);
-    printf("Enclave ends..\n");
+    
     //free data
-    for (int i = 0; i < MAX_IMAGE; i++) {
-        free_image(im[i]);
+    for (int ii = 0; ii < i; ii++) {
+        printf("Enclave starts %d / %d ..\n", ii+1, i);
+        ecall_classify(global_eid, sections, plist, im+ii);
+        printf("Enclave ends..\n");
+        free_image(im[ii]);
     }
+    free(im);
     fclose(image_fp);
     printf("Classification complete..\n");
 }
@@ -214,7 +218,7 @@ void test_imagenet(char *cfgfile)
  */
 void test_batch_imagenet(char *cfgfile)
 {
-    printf("Classification starts..\n");
+    printf("Batch Classification starts..\n");
     //read network config file
     list *sections = read_cfg(cfgfile);
     //read labels
@@ -228,7 +232,6 @@ void test_batch_imagenet(char *cfgfile)
     char buff[256];
     char *input = buff;
     strncpy(input, file, 256);
-    // image im = load_image_color(input, 0, 0);
     image imgs[3];
     for (int i = 0; i < 3; i++)
     {
@@ -289,8 +292,8 @@ int SGX_CDECL main(int argc, char *argv[])
     //train_cifar(CIFAR_CFG_FILE);
     //test_cifar(CIFAR_CFG_FILE);
     // test_tiny(TINY_CFG);
-    // test_imagenet(IMAGENET_CFG_FILE);
     test_batch_imagenet(IMAGENET_CFG_FILE);
+    test_imagenet(IMAGENET_CFG_FILE);
     //train_mnist(MNIST_CFG);
     // test_mnist(MNIST_CFG);
 

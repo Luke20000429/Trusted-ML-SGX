@@ -30,13 +30,6 @@ void empty_ecall()
 void fread(void *ptr, size_t size, size_t nmemb, int fp)
 {
     // NOTE: fread cannot handle too large file read, split into two parts
-    // printf("try ocall read nmemb %zu / %zu\n", nmemb, size);
-    // if (nmemb > 1000000) {
-    //     ocall_fread(ptr, size, 1000000);
-    //     ocall_fread(ptr+1000000*size, size, nmemb-1000000);
-    // } else {
-    //     ocall_fread(ptr, size, nmemb);
-    // }
     int i = 0;
     for (i = 0; i + 1000000 < nmemb; i = i + 1000000) {
         ocall_fread(ptr, size, 1000000);

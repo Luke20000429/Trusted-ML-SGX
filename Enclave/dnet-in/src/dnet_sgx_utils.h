@@ -25,7 +25,7 @@
 #define MAX_CHAR 4096
 
 // #define DNET_SGX_DEBUG //uncomment if you need more verbose output during training/debugging
-#define SGX_OMP //OMP not used yet 
+#define SGX_OMP //OMP used
 
 #define PRINT_BLOCK()                    \
     {                                    \

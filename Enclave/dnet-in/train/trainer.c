@@ -9,9 +9,9 @@
 #define TINY_WEIGHTS "./App/dnet-out/backup/resnet152.weights"
 #define MNIST_WEIGHTS "./App/dnet-out/backup/mnist.weights"
 #define IMAGENET_WEIGHTS "./App/dnet-out/backup/resnet18.weights"
-#define MAX_IMAGE 10
+#define MAX_IMAGE 1
 //global network model
-//network *net = NULL;
+network *net = NULL;
 
 /**
  * Pxxx
@@ -147,12 +147,7 @@ void ecall_classify(list *sections, list *labels, image *im)
      */
     sgx_lfence();
     predict_classifier(sections, labels, im, 5);
-    // image imgs[3];
-    // imgs[0] = *im;
-    // imgs[1] = *im;
-    // imgs[2] = *im;
-    // predict_classifier_batch(sections, labels, imgs, 3, 5);
-    printf("Classify tiny finished!\n");
+    printf("Classify finished!\n");
 }
 
 void ecall_batch_classify(list *sections, list *labels, image *imgs, int batch)
@@ -308,47 +303,38 @@ void test_fio()
 
 void predict_classifier(list *sections, list *labels, image *img, int top)
 {
-    network *net = load_network(sections, IMAGENET_WEIGHTS, 0);
-    set_batch_network(net, 1);
-    srand(2222222);
-
+    if (net == NULL) {
+        printf("No neural network in enclave..\n");
+        net = load_network(sections, IMAGENET_WEIGHTS, 0);
+        set_batch_network(net, 1);
+        srand(2222222);
+    }
     // list *options = read_data_cfg(datacfg);
 
-    // char *name_list = option_find_str(options, "names", 0);
-    // if(!name_list) name_list = option_find_str(options, "labels", "data/labels.list");
-    // if(top == 0) top = option_find_int(options, "top", 1);
-    // char **names = get_labels(name_list);
     char **names = (char **)list_to_array(labels);
     int *indexes = calloc(top, sizeof(int));
     int i = 0;
-    for (int image_idx = 0; image_idx < MAX_IMAGE; image_idx++) {
-        printf("Infer image %d of total %d\n", image_idx, MAX_IMAGE);
-        image im = img[image_idx];
-        image r = letterbox_image(im, net->w, net->h);
+    // printf("Infer image %d of total %d\n", image_idx, MAX_IMAGE);
+    image im = *img;
+    image r = letterbox_image(im, net->w, net->h);
 
-        //image r = resize_min(im, 320);
-        //printf("%d %d\n", r.w, r.h);
-        //resize_network(net, r.w, r.h);
-        //printf("%d %d\n", r.w, r.h);
+    float *X = r.data;
 
-        float *X = r.data;
-
-        float *predictions = network_predict(net, X);
-        if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
-        top_k(predictions, net->outputs, top, indexes);
-        for(i = 0; i < top; ++i){
-            int index = indexes[i];
-            //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
-            //else printf("%s: %f\n",names[index], predictions[index]);
-            printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
-        }
-        if(r.data != im.data) free_image(r);
+    float *predictions = network_predict(net, X);
+    if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
+    top_k(predictions, net->outputs, top, indexes);
+    for(i = 0; i < top; ++i){
+        int index = indexes[i];
+        printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
     }
+    if(r.data != im.data) free_image(r);
+    // free_network(net);
+    // net = NULL;
 }
 
 void predict_classifier_batch(list *sections, list *labels, image *imgs, int batch, int top)
 {
-    network *net = load_network(sections, IMAGENET_WEIGHTS, 0);
+    net = load_network(sections, IMAGENET_WEIGHTS, 0);
     set_batch_network(net, batch);
     srand(2222222);
 
@@ -379,6 +365,8 @@ void predict_classifier_batch(list *sections, list *labels, image *imgs, int bat
     }
     free(X);
     free(indexes);
+    free_network(net);
+    net = NULL;
 }
 
 /**
