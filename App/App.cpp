@@ -10,7 +10,7 @@
 
 /* For romulus */
 #define MAX_PATH FILENAME_MAX
-
+#define MAX_IMAGE 10
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 static int stack_val = 10;
@@ -113,7 +113,7 @@ void test_tiny(char *cfgfile)
     image im = load_image_color(input, 0, 0);
     printf("Enclave starts..\n");
     //classify image in enclave
-    ecall_classify(global_eid, sections, plist, &im);
+    // ecall_classify(global_eid, sections, plist, &im);
     printf("Enclave ends..\n");
     //free data
     free_image(im);
@@ -172,16 +172,27 @@ void test_imagenet(char *cfgfile)
     list *plist = get_paths(name_list);
 
     //read image file
-    char *file = IMAGENET_IMAGE;
-    char buff[256];
-    char *input = buff;
-    strncpy(input, file, 256);
-    image im = load_image_color(input, 0, 0);
+    image *im = (image *)calloc(MAX_IMAGE, sizeof(image));
+    // FILE *fp = fopen(IMAGENET_IMAGE, "r");
+    // if(fp == NULL) {
+    //     printf("Unable to open file!");
+    //     exit(1);
+    // }
+    for (int i = 0; i < MAX_IMAGE; i++) {
+        char *file = IMAGENET_IMAGE;
+        char buff[256];
+        char *input = buff;
+        strncpy(input, file, 256);
+        im[i] = load_image_color(input, 0, 0);
+        printf("Addr: %p", (void*)im[i].data);
+    }
     printf("Enclave starts..\n");
-    ecall_classify(global_eid, sections, plist, &im);
+    ecall_classify(global_eid, sections, plist, im);
     printf("Enclave ends..\n");
     //free data
-    free_image(im);
+    for (int i = 0; i < MAX_IMAGE; i++) {
+        free_image(im[i]);
+    }
     printf("Classification complete..\n");
 }
 
