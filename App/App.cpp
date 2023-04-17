@@ -35,7 +35,7 @@ data training_data, test_data;
 #define MNIST_TEST_LABELS "./App/dnet-out/data/mnist/t10k-labels-idx1-ubyte"
 #define MNIST_CFG "./App/dnet-out/cfg/mnist.cfg"
 
-#define IMAGENET_CFG_FILE "./App/dnet-out/cfg/darknet19.cfg"
+#define IMAGENET_CFG_FILE "./App/dnet-out/cfg/resnet18.cfg"
 #define IMAGENET_TEST_DATA "./App/dnet-out/data/imagenet.data"
 #define IMAGENET_IMAGE "./App/dnet-out/data/dog.jpg"
 /* Thread function --> only for testing purposes */

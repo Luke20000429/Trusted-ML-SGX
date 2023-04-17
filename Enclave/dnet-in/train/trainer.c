@@ -8,7 +8,7 @@
 // #define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/tiny.weights"
 #define TINY_WEIGHTS "./App/dnet-out/backup/resnet152.weights"
 #define MNIST_WEIGHTS "./App/dnet-out/backup/mnist.weights"
-#define IMAGENET_WEIGHTS "./App/dnet-out/backup/darknet19.weights"
+#define IMAGENET_WEIGHTS "./App/dnet-out/backup/resnet18.weights"
 
 //global network model
 //network *net = NULL;
@@ -146,7 +146,12 @@ void ecall_classify(list *sections, list *labels, image *im)
      * before any assignment 
      */
     sgx_lfence();
-    predict_classifier(sections, labels, im, 5);
+    // predict_classifier(sections, labels, im, 5);
+    // image imgs[3];
+    // imgs[0] = *im;
+    // imgs[1] = *im;
+    // imgs[2] = *im;
+    predict_classifier_batch(sections, labels, im, 3, 5);
     printf("Classify tiny finished!\n");
 }
 
@@ -241,7 +246,7 @@ void classify_tiny(list *sections, list *labels, image *img, int top)
 
     network *net = load_network(sections, TINY_WEIGHTS, 0);
     printf("Done loading trained network model in enclave..\n");
-    set_batch_network(net, 1);
+    set_batch_network(net, 1); // TODO: batch > 1
     srand(54321);
 
     //get label names; e.g dog, person, giraffe etc
@@ -328,6 +333,53 @@ void predict_classifier(list *sections, list *labels, image *img, int top)
     if(r.data != im.data) free_image(r);
     free_image(im);
 }
+
+void predict_classifier_batch(list *sections, list *labels, image *imgs, int batch, int top)
+{
+    network *net = load_network(sections, IMAGENET_WEIGHTS, 0);
+    set_batch_network(net, batch);
+    srand(2222222);
+
+    int i = 0;
+    char **names = (char **)list_to_array(labels);
+
+    int *indexes = calloc(top, sizeof(int));
+    
+
+    size_t img_size = net->w * net->h * net->c;
+    printf("img_size: %d = %d * %d * %d, batch %d\n", img_size, net->w, net->h, net->c, net->batch);
+    float *X = calloc(batch * img_size, sizeof(float));
+    // for (int b=0; b < batch; ++b) {
+    //     image im = imgs[b];
+    //     image r = letterbox_image(im, net->w, net->h); // resize image to network size
+    //     assert(img_size == r.h * r.w * r.c); // must be consistent
+    //     memcpy(X + b * img_size, r.data, img_size * sizeof(float));
+    //     free_image(r);
+    // }
+    image im = *imgs;
+    image r = letterbox_image(im, net->w, net->h); // resize image to network size
+    assert(img_size == r.h * r.w * r.c); // must be consistent
+    memcpy(X + 0 * img_size, r.data, img_size * sizeof(float));
+    memcpy(X + 1 * img_size, r.data, img_size * sizeof(float));
+    memcpy(X + 2 * img_size, r.data, img_size * sizeof(float));
+
+    float *batch_predictions = network_predict(net, X);
+
+    for (int b = 0; b < batch; ++b) {
+        float* predictions = batch_predictions + net->outputs * b;
+        // for (int i = 0; i < net->outputs; ++i) {
+        //     printf("%f ", predictions[i]);
+        // }
+        // printf("\n");
+        top_k(predictions, net->outputs, top, indexes);
+        for(i = 0; i < top; ++i){
+            int index = indexes[i];
+            printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
+        }
+        // free_image(imgs[b]);
+    }
+}
+
 /**
  * Author: xxx xxx
  * Knowledge distillation involves training a smaller network with 
