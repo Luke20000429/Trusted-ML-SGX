@@ -19,6 +19,13 @@ typedef struct ms_ecall_classify_t {
 	image* ms_im;
 } ms_ecall_classify_t;
 
+typedef struct ms_ecall_batch_classify_t {
+	list* ms_sections;
+	list* ms_labels;
+	image* ms_im;
+	int ms_batch;
+} ms_ecall_batch_classify_t;
+
 typedef struct ms_ocall_open_file_t {
 	const char* ms_filename;
 	flag ms_oflag;
@@ -271,6 +278,18 @@ sgx_status_t ecall_classify(sgx_enclave_id_t eid, list* sections, list* labels, 
 	ms.ms_labels = labels;
 	ms.ms_im = im;
 	status = sgx_ecall(eid, 3, &ocall_table_Enclave, &ms);
+	return status;
+}
+
+sgx_status_t ecall_batch_classify(sgx_enclave_id_t eid, list* sections, list* labels, image* im, int batch)
+{
+	sgx_status_t status;
+	ms_ecall_batch_classify_t ms;
+	ms.ms_sections = sections;
+	ms.ms_labels = labels;
+	ms.ms_im = im;
+	ms.ms_batch = batch;
+	status = sgx_ecall(eid, 4, &ocall_table_Enclave, &ms);
 	return status;
 }
 

@@ -11,6 +11,7 @@
         public void ecall_trainer([user_check]list* sections,[user_check] data* training_data, int pmem);
         public void ecall_tester([user_check]list* sections,[user_check] data* test_data, int pmem);
         public void ecall_classify([user_check]list* sections,[user_check]list* labels, [user_check]image* im);
+        public void ecall_batch_classify([user_check]list* sections,[user_check]list* labels, [user_check]image* im, int batch);
 
     };
 

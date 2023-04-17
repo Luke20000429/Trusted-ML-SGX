@@ -176,12 +176,20 @@ void test_imagenet(char *cfgfile)
     char buff[256];
     char *input = buff;
     strncpy(input, file, 256);
-    image im = load_image_color(input, 0, 0);
+    // image im = load_image_color(input, 0, 0);
+    image imgs[3];
+    for (int i = 0; i < 3; i++)
+    {
+        imgs[i] = load_image_color(input, 0, 0);;
+    }
     printf("Enclave starts..\n");
-    ecall_classify(global_eid, sections, plist, &im);
+    ecall_batch_classify(global_eid, sections, plist, imgs, 3);
     printf("Enclave ends..\n");
     //free data
-    free_image(im);
+    for (int i = 0; i < 3; i++)
+    {
+        free_image(imgs[i]);
+    }
     printf("Classification complete..\n");
 }
 

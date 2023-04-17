@@ -20,6 +20,7 @@ void empty_ecall(void);
 void ecall_trainer(list* sections, data* training_data, int pmem);
 void ecall_tester(list* sections, data* test_data, int pmem);
 void ecall_classify(list* sections, list* labels, image* im);
+void ecall_batch_classify(list* sections, list* labels, image* im, int batch);
 
 sgx_status_t SGX_CDECL ocall_open_file(const char* filename, flag oflag);
 sgx_status_t SGX_CDECL ocall_close_file(void);

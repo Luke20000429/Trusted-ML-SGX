@@ -337,7 +337,7 @@ void set_temp_network(network *net, float t)
 
 void set_batch_network(network *net, int b)
 {   
-    // assert(b <= net->batch);
+    assert(b <= net->batch);
     net->batch = b;
     int i;
     for (i = 0; i < net->n; ++i)

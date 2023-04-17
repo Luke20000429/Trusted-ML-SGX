@@ -82,6 +82,7 @@ sgx_status_t empty_ecall(sgx_enclave_id_t eid);
 sgx_status_t ecall_trainer(sgx_enclave_id_t eid, list* sections, data* training_data, int pmem);
 sgx_status_t ecall_tester(sgx_enclave_id_t eid, list* sections, data* test_data, int pmem);
 sgx_status_t ecall_classify(sgx_enclave_id_t eid, list* sections, list* labels, image* im);
+sgx_status_t ecall_batch_classify(sgx_enclave_id_t eid, list* sections, list* labels, image* im, int batch);
 
 #ifdef __cplusplus
 }
