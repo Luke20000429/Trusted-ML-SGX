@@ -35,6 +35,9 @@ data training_data, test_data;
 #define MNIST_TEST_LABELS "./App/dnet-out/data/mnist/t10k-labels-idx1-ubyte"
 #define MNIST_CFG "./App/dnet-out/cfg/mnist.cfg"
 
+#define IMAGENET_CFG_FILE "./App/dnet-out/cfg/darknet19.cfg"
+#define IMAGENET_TEST_DATA "./App/dnet-out/data/imagenet.data"
+#define IMAGENET_IMAGE "./App/dnet-out/data/dog.jpg"
 /* Thread function --> only for testing purposes */
 void thread_func()
 {
@@ -153,6 +156,35 @@ void test_mnist(char *cfgfile)
     free_data(test);
 }
 
+//---------------------------------------------------------------------------------------------------------------------------------------
+/**
+ * Classify an image with a trained Tiny Darknet model
+ * Define path to weightfile in trainer.c
+ */
+void test_imagenet(char *cfgfile)
+{
+    printf("Classification starts..\n");
+    //read network config file
+    list *sections = read_cfg(cfgfile);
+    //read labels
+    list *options = read_data_cfg(IMAGENET_TEST_DATA);
+    char *name_list = option_find_str(options, "names", 0);
+    list *plist = get_paths(name_list);
+
+    //read image file
+    char *file = IMAGENET_IMAGE;
+    char buff[256];
+    char *input = buff;
+    strncpy(input, file, 256);
+    image im = load_image_color(input, 0, 0);
+    printf("Enclave starts..\n");
+    ecall_classify(global_eid, sections, plist, &im);
+    printf("Enclave ends..\n");
+    //free data
+    free_image(im);
+    printf("Classification complete..\n");
+}
+
 //--------------------------------------------------------------------------------------------------------------
 
 /* Initialize the enclave:
@@ -195,7 +227,8 @@ int SGX_CDECL main(int argc, char *argv[])
 
     //train_cifar(CIFAR_CFG_FILE);
     //test_cifar(CIFAR_CFG_FILE);
-    test_tiny(TINY_CFG);
+    // test_tiny(TINY_CFG);
+    test_imagenet(IMAGENET_CFG_FILE);
     //train_mnist(MNIST_CFG);
     // test_mnist(MNIST_CFG);
 

@@ -4,10 +4,11 @@
 #include "trainer.h"
 #include "checks.h"
 
-#define CIFAR_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/cifar.weights"
+#define CIFAR_WEIGHTS "./App/dnet-out/backup/cifar.weights"
 // #define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/tiny.weights"
-#define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/resnet152.weights"
-#define MNIST_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/mnist.weights"
+#define TINY_WEIGHTS "./App/dnet-out/backup/resnet152.weights"
+#define MNIST_WEIGHTS "./App/dnet-out/backup/mnist.weights"
+#define IMAGENET_WEIGHTS "./App/dnet-out/backup/darknet19.weights"
 
 //global network model
 //network *net = NULL;
@@ -145,7 +146,7 @@ void ecall_classify(list *sections, list *labels, image *im)
      * before any assignment 
      */
     sgx_lfence();
-    classify_tiny(sections, labels, im, 5);
+    predict_classifier(sections, labels, im, 5);
     printf("Classify tiny finished!\n");
 }
 
@@ -283,6 +284,49 @@ void test_fio()
     fread(buffer, strlen(c) + 1, 1, 0);
     printf("String: %s\n", buffer);
     ocall_close_file();
+}
+
+
+void predict_classifier(list *sections, list *labels, image *img, int top)
+{
+    network *net = load_network(sections, IMAGENET_WEIGHTS, 0);
+    set_batch_network(net, 1);
+    srand(2222222);
+
+    // list *options = read_data_cfg(datacfg);
+
+    // char *name_list = option_find_str(options, "names", 0);
+    // if(!name_list) name_list = option_find_str(options, "labels", "data/labels.list");
+    // if(top == 0) top = option_find_int(options, "top", 1);
+
+    int i = 0;
+    // char **names = get_labels(name_list);
+    char **names = (char **)list_to_array(labels);
+
+    int *indexes = calloc(top, sizeof(int));
+    char buff[256];
+    char *input = buff;
+
+    image im = *img;
+    image r = letterbox_image(im, net->w, net->h);
+    //image r = resize_min(im, 320);
+    //printf("%d %d\n", r.w, r.h);
+    //resize_network(net, r.w, r.h);
+    //printf("%d %d\n", r.w, r.h);
+
+    float *X = r.data;
+
+    float *predictions = network_predict(net, X);
+    if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
+    top_k(predictions, net->outputs, top, indexes);
+    for(i = 0; i < top; ++i){
+        int index = indexes[i];
+        //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
+        //else printf("%s: %f\n",names[index], predictions[index]);
+        printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
+    }
+    if(r.data != im.data) free_image(r);
+    free_image(im);
 }
 /**
  * Author: xxx xxx

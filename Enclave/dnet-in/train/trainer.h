@@ -12,7 +12,8 @@ extern "C"
     void test_cfiar(list *sections, data *test_data, int pmem);
     void test_mnist(list *sections, data *test_data, int pmem);
     void classify_tiny(list *sections, list *labels, image *im, int top);
-
+    void predict_classifier(list *sections, list *labels, image *img, int top);
+    
 #if defined(__cplusplus)
 }
 #endif
