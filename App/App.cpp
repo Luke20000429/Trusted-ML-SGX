@@ -37,7 +37,7 @@ data training_data, test_data;
 
 #define IMAGENET_CFG_FILE "./App/dnet-out/cfg/darknet19.cfg"
 #define IMAGENET_TEST_DATA "./App/dnet-out/data/imagenet.data"
-#define IMAGENET_IMAGE "./App/dnet-out/data/dog.jpg"
+#define IMAGENET_IMAGE "./App/dnet-out/data/imagenet/imagenet.image.list"
 /* Thread function --> only for testing purposes */
 void thread_func()
 {
@@ -173,16 +173,28 @@ void test_imagenet(char *cfgfile)
 
     //read image file
     image *im = (image *)calloc(MAX_IMAGE, sizeof(image));
-    // FILE *fp = fopen(IMAGENET_IMAGE, "r");
-    // if(fp == NULL) {
-    //     printf("Unable to open file!");
-    //     exit(1);
-    // }
+
+
+    FILE * image_fp;
+    char * line = NULL;
+    size_t len = 256;
+
+    image_fp = fopen(IMAGENET_IMAGE, "r");
+    if (image_fp == NULL)
+        exit(EXIT_FAILURE);
+
     for (int i = 0; i < MAX_IMAGE; i++) {
-        char *file = IMAGENET_IMAGE;
+        if (getline(&line, &len, image_fp) == -1) {
+            exit(1);
+        }
+        size_t last_idx = strlen(line) - 1;
+        if( line[last_idx] == '\n' ) {
+            line[last_idx] = '\0';
+        }
+        printf("Image from %s\n", line);
         char buff[256];
         char *input = buff;
-        strncpy(input, file, 256);
+        strncpy(input, line, 256);
         im[i] = load_image_color(input, 0, 0);
         printf("Addr: %p", (void*)im[i].data);
     }
@@ -193,6 +205,7 @@ void test_imagenet(char *cfgfile)
     for (int i = 0; i < MAX_IMAGE; i++) {
         free_image(im[i]);
     }
+    fclose(image_fp);
     printf("Classification complete..\n");
 }
 
