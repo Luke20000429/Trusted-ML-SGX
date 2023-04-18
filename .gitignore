@@ -35,3 +35,8 @@
 sgxssl
 
 *.weights
+app
+app_loop
+app_batch
+
+*.tgz

@@ -1,0 +1,6 @@
+classes=10
+train  = App/dnet-out/data/labels/cifar.train.list
+valid  = App/dnet-out/data/labels/cifar.test.list
+labels = App/dnet-out/data/cifar/labels.txt
+backup = App/dnet-out/backup/
+top=2

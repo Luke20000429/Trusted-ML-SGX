@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.sv": "systemverilog",
         "dnet_sgx_utils.h": "c",
         "array": "cpp",
         "string": "cpp",
@@ -53,6 +54,9 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "darknet.h": "c",
-        "dnet_ocalls.h": "c"
+        "dnet_ocalls.h": "c",
+        "time.h": "c",
+        "trainer.h": "c",
+        "checks.h": "c"
     }
 }

@@ -11,6 +11,7 @@
 #include <mbusafecrt.h> /* for memcpy_s etc */
 #include <stdlib.h> /* for malloc/free etc */
 
+
 #define CHECK_REF_POINTER(ptr, siz) do {	\
 	if (!(ptr) || ! sgx_is_outside_enclave((ptr), (siz))){\
 		printf("SGX_ERROR_INVALID_PARAMETER\n");\

@@ -8,10 +8,9 @@
 // #define TINY_WEIGHTS "/home/liuxs/workarea/sgx-dnet/App/dnet-out/backup/tiny.weights"
 #define TINY_WEIGHTS "./App/dnet-out/backup/resnet152.weights"
 #define MNIST_WEIGHTS "./App/dnet-out/backup/mnist.weights"
-#define IMAGENET_WEIGHTS "./App/dnet-out/backup/darknet19.weights"
-#define MAX_IMAGE 10
+
 //global network model
-//network *net = NULL;
+network *net = NULL;
 
 /**
  * Pxxx
@@ -136,7 +135,7 @@ void ecall_tester(list *sections, data *test_data, int pmem)
     test_mnist(sections, test_data, pmem);
 }
 
-void ecall_classify(list *sections, list *labels, image *im)
+void ecall_classify(list *sections, list *labels, image *im, char *weights, int image_num)
 {
     CHECK_REF_POINTER(sections, sizeof(list));
     CHECK_REF_POINTER(labels, sizeof(list));
@@ -146,8 +145,8 @@ void ecall_classify(list *sections, list *labels, image *im)
      * before any assignment 
      */
     sgx_lfence();
-    predict_classifier(sections, labels, im, 5);
-    printf("Classify tiny finished!\n");
+    predict_classifier(sections, labels, im, 5, weights, image_num);
+    printf("Classify finished!\n");
 }
 
 /**
@@ -287,12 +286,20 @@ void test_fio()
 }
 
 
-void predict_classifier(list *sections, list *labels, image *img, int top)
+void predict_classifier(list *sections, list *labels, image *img, int top, char *weights, int image_num)
 {
-    network *net = load_network(sections, IMAGENET_WEIGHTS, 0);
-    set_batch_network(net, 1);
-    srand(2222222);
-
+    if (net == NULL) {
+        printf("No neural network in enclave..\n");
+        printf("%s %d\n", weights, image_num);
+        char *local_weights = (char *) calloc(256, sizeof(char));
+        for (int i = 0; weights[i] != '\0'; ++i) {
+            local_weights[i] = weights[i];
+        }
+        net = load_network(sections, local_weights, 0);
+        set_batch_network(net, 1);
+        srand(2222222);
+        free(local_weights);
+    }
     // list *options = read_data_cfg(datacfg);
 
     // char *name_list = option_find_str(options, "names", 0);
@@ -302,8 +309,8 @@ void predict_classifier(list *sections, list *labels, image *img, int top)
     char **names = (char **)list_to_array(labels);
     int *indexes = calloc(top, sizeof(int));
     int i = 0;
-    for (int image_idx = 0; image_idx < MAX_IMAGE; image_idx++) {
-        printf("Infer image %d of total %d\n", image_idx, MAX_IMAGE);
+    for (int image_idx = 0; image_idx < image_num; image_idx++) {
+        printf("Infer image %d of total %d\n", image_idx, image_num);
         image im = img[image_idx];
         image r = letterbox_image(im, net->w, net->h);
 

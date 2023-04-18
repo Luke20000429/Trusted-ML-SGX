@@ -7,10 +7,10 @@
 #include <sgx_urts.h>
 #include "App.h"
 #include "ErrorSupport.h"
-
+#include <time.h>
 /* For romulus */
 #define MAX_PATH FILENAME_MAX
-#define MAX_IMAGE 10
+#define MAX_IMAGE 1
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 static int stack_val = 10;
@@ -35,9 +35,15 @@ data training_data, test_data;
 #define MNIST_TEST_LABELS "./App/dnet-out/data/mnist/t10k-labels-idx1-ubyte"
 #define MNIST_CFG "./App/dnet-out/cfg/mnist.cfg"
 
-#define IMAGENET_CFG_FILE "./App/dnet-out/cfg/darknet19.cfg"
-#define IMAGENET_TEST_DATA "./App/dnet-out/data/imagenet.data"
-#define IMAGENET_IMAGE "./App/dnet-out/data/imagenet/imagenet.image.list"
+char* IMAGENET_CFG_FILE = "";
+char* IMAGENET_TEST_DATA = "";
+char* IMAGENET_IMAGE = "";
+char* IMAGENET_WEIGHTS = "";
+
+// ./App/dnet-out/cfg/darknet19.cfg
+// ./App/dnet-out/data/imagenet.data
+// ./App/dnet-out/data/imagenet/imagenet.image.list
+// ./App/dnet-out/backup/darknet19.weights
 /* Thread function --> only for testing purposes */
 void thread_func()
 {
@@ -191,20 +197,28 @@ void test_imagenet(char *cfgfile)
         if( line[last_idx] == '\n' ) {
             line[last_idx] = '\0';
         }
-        printf("Image from %s\n", line);
+        // printf("Image from %s\n", line);
         char buff[256];
         char *input = buff;
         strncpy(input, line, 256);
         im[i] = load_image_color(input, 0, 0);
-        printf("Addr: %p", (void*)im[i].data);
     }
     printf("Enclave starts..\n");
-    ecall_classify(global_eid, sections, plist, im);
+    timespec start_tp;
+    timespec end_tp;
+    int timestamp = clock_gettime(0, &start_tp);
+    char *weights = (char*) malloc((256)*sizeof(char));
+    strcpy(weights, IMAGENET_WEIGHTS);
+    printf("%s\n", weights);
+    ecall_classify(global_eid, sections, plist, im, weights, MAX_IMAGE);
     printf("Enclave ends..\n");
+    timestamp = clock_gettime(0, &end_tp);
+    fprintf(stderr, "Run Time: %ld ms\n", ((end_tp.tv_sec-start_tp.tv_sec)  * (long)1e9 + (end_tp.tv_nsec-start_tp.tv_nsec)) / 1000000);
     //free data
     for (int i = 0; i < MAX_IMAGE; i++) {
         free_image(im[i]);
     }
+    free(weights);
     fclose(image_fp);
     printf("Classification complete..\n");
 }
@@ -233,19 +247,27 @@ int initialize_enclave(void)
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
-    (void)argc;
-    (void)argv;
+    // (void)argc;
+    // (void)argv;
 
     sgx_status_t ret;
 
+    IMAGENET_CFG_FILE = argv[1];
+    IMAGENET_TEST_DATA = argv[2];
+    IMAGENET_IMAGE = argv[3];
+    IMAGENET_WEIGHTS = argv[4];
     /* Initialize the enclave */
+    timespec start_tp;
+    timespec end_tp;
+    int timestamp = clock_gettime(0, &start_tp);
     if (initialize_enclave() < 0)
     {
         printf("Enter a character before exit ...\n");
         getchar();
         return -1;
     }
-
+    timestamp = clock_gettime(0, &end_tp);
+    fprintf(stderr, "Init Time: %ld ms\n", ((end_tp.tv_sec-start_tp.tv_sec)  * (long)1e9 + (end_tp.tv_nsec-start_tp.tv_nsec)) / 1000000);
     //Create NUM_THRREADS threads
     //std::thread trd[NUM_THREADS];
 

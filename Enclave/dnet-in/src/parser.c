@@ -1328,6 +1328,7 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
     /* FILE *fp = fopen(filename, "rb");
     if(!fp) file_error(filename); */
     //ocall_open_weights_file();
+    printf("*******%s********\n", filename);
     ocall_open_file(filename, O_RDONLY);
     int fp = 0;
 
