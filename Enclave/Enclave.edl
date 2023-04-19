@@ -7,11 +7,11 @@
 enclave {
     
     include "dnet_types.h" /* network, data */
+    include "sgx_tseal.h"
 
     from "sgx_tstdc.edl" import *;
     from "dnet-in/train/Trainer.edl" import *;
     from "sgx_pthread.edl" import *; /* for openmp */
-    include "sgx_tseal.h"
     
 
     trusted {

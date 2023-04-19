@@ -52,26 +52,26 @@ void empty_ecall()
 void fread(void *ptr, size_t size, size_t nmemb, int fp)
 {
     // NOTE: fread cannot handle too large file read, split into two parts
-    // int i = 0;
-    // for (i = 0; i + 1000000 < nmemb; i = i + 1000000) {
-    //     ocall_fread(ptr, size, 1000000);
-    //     ptr += 1000000*size;
-    // }
-    // ocall_fread(ptr, size, nmemb-i);
-    // ptr += (nmemb-i)*size;
+    int i = 0;
+    for (i = 0; i + 1000000 < nmemb; i = i + 1000000) {
+        ocall_fread(ptr, size, 1000000);
+        ptr += 1000000*size;
+    }
+    ocall_fread(ptr, size, nmemb-i);
+    ptr += (nmemb-i)*size;
     // TODO: change fread to read from unsealed buffer
-    if (plaintext != NULL && plaintext_ptr < plaintext_len) {
-        memcpy(ptr, plaintext+plaintext_ptr, nmemb*size);
-        plaintext_ptr += nmemb*size;
-    } else {
-        printf("Error: fread failed\n");
-    }
-    if (plaintext_ptr >= plaintext_len) {
-        free(plaintext);
-        plaintext = NULL;
-        plaintext_ptr = 0;
-        plaintext_len = 0;
-    }
+    // if (plaintext != NULL && plaintext_ptr < plaintext_len) {
+    //     memcpy(ptr, plaintext+plaintext_ptr, nmemb*size);
+    //     plaintext_ptr += nmemb*size;
+    // } else {
+    //     printf("Error: fread failed\n");
+    // }
+    // if (plaintext_ptr >= plaintext_len) {
+    //     free(plaintext);
+    //     plaintext = NULL;
+    //     plaintext_ptr = 0;
+    //     plaintext_len = 0;
+    // }
 }
 
 void fwrite(void *ptr, size_t size, size_t nmemb, int fp)
