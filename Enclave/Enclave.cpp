@@ -11,6 +11,20 @@
 #include <stdarg.h>
 #include <stdio.h>
 //#include <thread>
+#include "sgx_tseal.h"
+#include "string.h"
+
+// TODO: store global ptrs instead of return to app
+uint8_t *plaintext = NULL;
+size_t plaintext_len = 0, plaintext_ptr = 0;
+
+sgx_status_t seal(uint8_t* plaintext, size_t plaintext_len, sgx_sealed_data_t* sealed_data, size_t sealed_size) {
+  return sgx_seal_data(0, NULL, plaintext_len, plaintext, sealed_size, sealed_data);
+}
+
+sgx_status_t unseal(sgx_sealed_data_t* sealed_data, size_t sealed_size, uint8_t* plaintext, uint32_t plaintext_len) {
+  return sgx_unseal_data(sealed_data, NULL, NULL, (uint8_t*) plaintext, &plaintext_len);
+}
 
 void printf(const char *fmt, ...)
 {
@@ -30,13 +44,6 @@ void empty_ecall()
 void fread(void *ptr, size_t size, size_t nmemb, int fp)
 {
     // NOTE: fread cannot handle too large file read, split into two parts
-    // printf("try ocall read nmemb %zu / %zu\n", nmemb, size);
-    // if (nmemb > 1000000) {
-    //     ocall_fread(ptr, size, 1000000);
-    //     ocall_fread(ptr+1000000*size, size, nmemb-1000000);
-    // } else {
-    //     ocall_fread(ptr, size, nmemb);
-    // }
     int i = 0;
     for (i = 0; i + 1000000 < nmemb; i = i + 1000000) {
         ocall_fread(ptr, size, 1000000);
@@ -44,8 +51,9 @@ void fread(void *ptr, size_t size, size_t nmemb, int fp)
     }
     ocall_fread(ptr, size, nmemb-i);
     ptr += (nmemb-i)*size;
+    // TODO: change fread to read from unsealed buffer
 
-    // ocall_fread(ptr, size, nmemb);
+    
 }
 
 void fwrite(void *ptr, size_t size, size_t nmemb, int fp)

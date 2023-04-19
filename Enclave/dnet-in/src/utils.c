@@ -223,21 +223,6 @@ void error(const char *s)
     //exit(-1);
 }
 
-/* unsigned char *read_file(char *filename)
-{
-    FILE *fp = fopen(filename, "rb");
-    size_t size;
-
-    fseek(fp, 0, SEEK_END); 
-    size = ftell(fp);
-    fseek(fp, 0, SEEK_SET); 
-
-    unsigned char *text = calloc(size+1, sizeof(char));
-    fread(text, 1, size, fp);
-    fclose(fp);
-    return text;
-} */
-
 void malloc_error()
 {
     printf("Malloc error\n");
