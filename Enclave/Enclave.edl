@@ -22,8 +22,7 @@ enclave {
         );
 
         public sgx_status_t unseal(
-        [in, size=sealed_size]sgx_sealed_data_t* sealed_data, size_t sealed_size,
-        [out, size=plaintext_len]uint8_t* plaintext, uint32_t plaintext_len
+        [in, size=sealed_size]sgx_sealed_data_t* sealed_data, size_t sealed_size
         );
         public void empty_ecall();
         

@@ -13,6 +13,7 @@
 
 
 #include "Enclave_t.h"
+#include "sgx_tseal.h"
 #include <stdarg.h>
 #include <stdio.h> /* vsnprintf */
 #include <stdlib.h>

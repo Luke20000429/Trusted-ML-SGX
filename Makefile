@@ -9,6 +9,8 @@ SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
 SGX_DEBUG ?= 1
+CXX = g++-11
+CC = gcc-11
 
 
 ifeq ($(shell getconf LONG_BIT), 32)

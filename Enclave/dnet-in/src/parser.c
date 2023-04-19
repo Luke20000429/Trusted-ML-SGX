@@ -1322,14 +1322,11 @@ void load_convolutional_weights(layer l, int fp)
     //if (l.binary) binarize_weights(l.weights, l.n, l.c*l.size*l.size, l.weights);
 }
 
-void load_weights_upto(network *net, char *filename, int start, int cutoff)
+void load_weights_upto(network *net, char *sealed_weights, int start, int cutoff)
 {
-
-    /* FILE *fp = fopen(filename, "rb");
-    if(!fp) file_error(filename); */
-    //ocall_open_weights_file();
-    printf("*******%s********\n", filename);
-    ocall_open_file(filename, O_RDONLY);
+    // printf("*******%s********\n", filename);
+    // NOTE: replace ocall open file with unseal file
+    // ocall_open_file(filename, O_RDONLY);
     int fp = 0;
 
     int major;
@@ -1421,9 +1418,9 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
     ocall_close_file();
 }
 
-void load_weights(network *net, char *filename)
+void load_weights(network *net, char *sealed_weights)
 {
     printf("Loading weights from weights file..\n");
-    load_weights_upto(net, filename, 0, net->n);
+    load_weights_upto(net, sealed_weights, 0, net->n);
     printf("Done loading weights..\n");
 }

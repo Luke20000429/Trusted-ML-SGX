@@ -8,6 +8,8 @@
 #include "App.h"
 #include "ErrorSupport.h"
 #include <time.h>
+#include "sgx_tseal.h"
+#include "Persistence.h"
 /* For romulus */
 #define MAX_PATH FILENAME_MAX
 // #define MAX_IMAGE 10
@@ -86,10 +88,25 @@ void test_imagenet(char *cfgfile)
     timespec start_tp;
     timespec end_tp;
     int timestamp = clock_gettime(1, &start_tp);
-    char *weights = (char*) malloc((256)*sizeof(char));
-    strcpy(weights, IMAGENET_WEIGHTS);
-    printf("%s\n", weights);
-    ecall_classify(global_eid, sections, plist, im, weights, NUM_IMAGES);
+    // strcpy(weights, IMAGENET_WEIGHTS);
+    // printf("%s\n", weights);
+    Persistence sealed_file(IMAGENET_WEIGHTS);
+    if (!sealed_file.exists()) {
+        printf("Sealed file does not exist\n");
+        exit(1);
+    }
+    unsigned int sealed_size = sealed_file.size();
+    char *sealed_weights = (char*) malloc(sealed_size);
+    sealed_file.load((uint8_t *) sealed_weights, sealed_size);
+    sgx_status_t ecall_status;
+    sgx_status_t status = unseal(global_eid, &ecall_status,
+                               (sgx_sealed_data_t*) sealed_weights, sealed_size);
+    if (status != SGX_SUCCESS || ecall_status != SGX_SUCCESS) {
+        printf("Unseal failed %d %d\n", status, ecall_status);
+        exit(1);
+    }
+    printf("Unseal Success\n");
+    ecall_classify(global_eid, sections, plist, im, sealed_weights, NUM_IMAGES);
     printf("Enclave ends..\n");
     timestamp = clock_gettime(1, &end_tp);
     fprintf(stderr, "Run Time: %ld ms\n", ((end_tp.tv_sec-start_tp.tv_sec)  * (long)1e9 + (end_tp.tv_nsec-start_tp.tv_nsec)) / 1000000);
@@ -97,7 +114,7 @@ void test_imagenet(char *cfgfile)
     for (int i = 0; i < NUM_IMAGES; i++) {
         free_image(im[i]);
     }
-    free(weights);
+    free(sealed_weights);
     fclose(image_fp);
     printf("Classification complete..\n");
 }
