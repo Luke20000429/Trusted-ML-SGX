@@ -146,6 +146,7 @@ void ecall_classify(list *sections, list *labels, image *im, char *weights, int 
      */
     sgx_lfence();
     predict_classifier(sections, labels, im, 5, weights, image_num);
+    // predict_classifier_batch(sections, labels, im, 5, weights, image_num);
     printf("Classify finished!\n");
 }
 
@@ -299,6 +300,7 @@ void predict_classifier(list *sections, list *labels, image *img, int top, char 
         set_batch_network(net, 1);
         srand(2222222);
         free(local_weights);
+        printf("Done loading trained network model in enclave..\n");
     }
     // list *options = read_data_cfg(datacfg);
 
@@ -321,205 +323,66 @@ void predict_classifier(list *sections, list *labels, image *img, int top, char 
 
         float *X = r.data;
 
-        float *predictions = network_predict(net, X);
-        if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
-        top_k(predictions, net->outputs, top, indexes);
-        for(i = 0; i < top; ++i){
-            int index = indexes[i];
-            //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
-            //else printf("%s: %f\n",names[index], predictions[index]);
-            printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
-        }
+        // float *predictions = network_predict(net, X);
+        // if(net->hierarchy) hierarchy_predictions(predictions, net->outputs, net->hierarchy, 1, 1);
+        // top_k(predictions, net->outputs, top, indexes);
+        // for(i = 0; i < top; ++i){
+        //     int index = indexes[i];
+        //     //if(net->hierarchy) printf("%d, %s: %f, parent: %s \n",index, names[index], predictions[index], (net->hierarchy->parent[index] >= 0) ? names[net->hierarchy->parent[index]] : "Root");
+        //     //else printf("%s: %f\n",names[index], predictions[index]);
+        //     printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
+        // }
         if(r.data != im.data) free_image(r);
     }
 }
-/**
- * Author: xxx xxx
- * Knowledge distillation involves training a smaller network with 
- * a larger network. 
- * 
- */
 
-/* void train_cifar_distill(char *cfgfile, char *weightfile)
+void predict_classifier_batch(list *sections, list *labels, image *imgs, int top, char *weights, int batch)
 {
-    srand(time(0));
-    float avg_loss = -1;
-    char *base = basecfg(cfgfile);
-    printf("%s\n", base);
-    network *net = load_network(cfgfile, weightfile, 0);
-    printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
-
-    char *backup_directory = "/home/liuxs/workarea/sgx-dnet/backup/";
-    int classes = 10;
-    int N = 50000;
-
-    char **labels = {"airplane","automobile","bird","cat","deer","dog","frog","horse","ship","truck"};
-    int epoch = (*net->seen)/N;
-
-    data train = load_all_cifar10();
-    matrix soft = csv_to_matrix("results/ensemble.csv");
-
-    float weight = .9;
-    scale_matrix(soft, weight);
-    scale_matrix(train.y, 1. - weight);
-    matrix_add_matrix(soft, train.y);
-
-    while(get_current_batch(net) < net->max_batches || net->max_batches == 0){
-        clock_t time=clock();
-
-        float loss = train_network_sgd(net, train, 1);
-        if(avg_loss == -1) avg_loss = loss;
-        avg_loss = avg_loss*.95 + loss*.05;
-        printf("%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net->seen);
-        if(*net->seen/N > epoch){
-            epoch = *net->seen/N;
-            char buff[256];
-            sprintf(buff, "%s/%s_%d.weights",backup_directory,base, epoch);
-            save_weights(net, buff);
+    if (net == NULL) {
+        printf("No neural network in enclave..\n");
+        printf("%s %d\n", weights, batch);
+        char *local_weights = (char *) calloc(256, sizeof(char));
+        for (int i = 0; weights[i] != '\0'; ++i) {
+            local_weights[i] = weights[i];
         }
-        if(get_current_batch(net)%100 == 0){
-            char buff[256];
-            sprintf(buff, "%s/%s.backup",backup_directory,base);
-            save_weights(net, buff);
-        }
+        net = load_network(sections, local_weights, 0);
+        set_batch_network(net, 1);
+        srand(2222222);
+        free(local_weights);
+        printf("Done loading trained network model in enclave..\n");
     }
-    char buff[256];
-    sprintf(buff, "%s/%s.weights", backup_directory, base);
-    save_weights(net, buff);
+    if (batch == 0) return;
+    set_batch_network(net, batch);
+    srand(2222222);
 
+    int i = 0;
+    char **names = (char **)list_to_array(labels);
+    int *indexes = calloc(top, sizeof(int));
+    
+    size_t img_size = net->w * net->h * net->c;
+    printf("img_size: %d = %d * %d * %d, batch %d\n", img_size, net->w, net->h, net->c, net->batch);
+    float *X = calloc(batch * img_size, sizeof(float));
+    for (int b=0; b < batch; ++b) {
+        image im = imgs[b];
+        image r = letterbox_image(im, net->w, net->h); // resize image to network size
+        assert(img_size == r.h * r.w * r.c); // must be consistent
+        memcpy(X + b * img_size, r.data, img_size * sizeof(float));
+        free_image(r);
+    }
+
+    float *batch_predictions = network_predict(net, X);
+
+    for (int b = 0; b < batch; ++b) {
+        float* predictions = batch_predictions + net->outputs * b;
+        top_k(predictions, net->outputs, top, indexes);
+        // for(i = 0; i < top; ++i){
+        //     int index = indexes[i];
+        //     printf("%5.2f%%: %s\n", predictions[index]*100, names[index]);
+        // }
+    }
+    free(X);
+    free(indexes);
     free_network(net);
-    free_ptrs((void**)labels, classes);
-    free(base);
-    free_data(train);
-} */
-
-/* void test_cifar_multi(char *filename, char *weightfile)
-{
-    network *net = load_network(filename, weightfile, 0);
-    set_batch_network(net, 1);
-    srand(time(0));
-
-    float avg_acc = 0;
-    data test = load_cifar10_data("data/cifar/cifar/test_batch.bin");
-
-    int i;
-    for(i = 0; i < test.X.rows; ++i){
-        image im = float_to_image(32, 32, 3, test.X.vals[i]);
-
-        float pred[10] = {0};
-
-        float *p = network_predict(net, im.data);
-        axpy_cpu(10, 1, p, 1, pred, 1);
-        flip_image(im);
-        p = network_predict(net, im.data);
-        axpy_cpu(10, 1, p, 1, pred, 1);
-
-        int index = max_index(pred, 10);
-        int class = max_index(test.y.vals[i], 10);
-        if(index == class) avg_acc += 1;
-        free_image(im);
-        printf("%4d: %.2f%%\n", i, 100.*avg_acc/(i+1));
-    }
-} */
-
-/* void extract_cifar()
-{
-char *labels[] = {"airplane","automobile","bird","cat","deer","dog","frog","horse","ship","truck"};
-    int i;
-    data train = load_all_cifar10();
-    data test = load_cifar10_data("data/cifar/cifar-10-batches-bin/test_batch.bin");
-    for(i = 0; i < train.X.rows; ++i){
-        image im = float_to_image(32, 32, 3, train.X.vals[i]);
-        int class = max_index(train.y.vals[i], 10);
-        char buff[256];
-        sprintf(buff, "data/cifar/train/%d_%s",i,labels[class]);
-        save_image_options(im, buff, PNG, 0);
-    }
-    for(i = 0; i < test.X.rows; ++i){
-        image im = float_to_image(32, 32, 3, test.X.vals[i]);
-        int class = max_index(test.y.vals[i], 10);
-        char buff[256];
-        sprintf(buff, "data/cifar/test/%d_%s",i,labels[class]);
-        save_image_options(im, buff, PNG, 0);
-    }
-} */
-
-/* void test_cifar_csv(char *filename, char *weightfile)
-{
-    network *net = load_network(filename, weightfile, 0);
-    srand(time(0));
-
-    data test = load_cifar10_data("data/cifar/cifar-10-batches-bin/test_batch.bin");
-
-    matrix pred = network_predict_data(net, test);
-
-    int i;
-    for(i = 0; i < test.X.rows; ++i){
-        image im = float_to_image(32, 32, 3, test.X.vals[i]);
-        flip_image(im);
-    }
-    matrix pred2 = network_predict_data(net, test);
-    scale_matrix(pred, .5);
-    scale_matrix(pred2, .5);
-    matrix_add_matrix(pred2, pred);
-
-    matrix_to_csv(pred);
-    fprintf(stderr, "Accuracy: %f\n", matrix_topk_accuracy(test.y, pred, 1));
-    free_data(test);
-} */
-
-/* void test_cifar_csvtrain(char *cfg, char *weights)
-{
-    network *net = load_network(cfg, weights, 0);
-    srand(time(0));
-
-    data test = load_all_cifar10();
-
-    matrix pred = network_predict_data(net, test);
-
-    int i;
-    for(i = 0; i < test.X.rows; ++i){
-        image im = float_to_image(32, 32, 3, test.X.vals[i]);
-        flip_image(im);
-    }
-    matrix pred2 = network_predict_data(net, test);
-    scale_matrix(pred, .5);
-    scale_matrix(pred2, .5);
-    matrix_add_matrix(pred2, pred);
-
-    matrix_to_csv(pred);
-    fprintf(stderr, "Accuracy: %f\n", matrix_topk_accuracy(test.y, pred, 1));
-    free_data(test);
+    net = NULL;
 }
 
-void eval_cifar_csv()
-{
-    data test = load_cifar10_data("data/cifar/cifar-10-batches-bin/test_batch.bin");
-
-    matrix pred = csv_to_matrix("results/combined.csv");
-    fprintf(stderr, "%d %d\n", pred.rows, pred.cols);
-
-    fprintf(stderr, "Accuracy: %f\n", matrix_topk_accuracy(test.y, pred, 1));
-    free_data(test);
-    free_matrix(pred);
-} */
-
-/* void run_cifar(int argc, char **argv)
-{
-    if(argc < 4){
-        fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n", argv[0], argv[1]);
-        return;
-    }
-
-    char *cfg = argv[3];
-    //if we have 5 args initialize weights else 0
-    char *weights = (argc > 4) ? argv[4] : 0;
-    if(0==strcmp(argv[2], "train")) train_cifar(cfg, weights);
-    else if(0==strcmp(argv[2], "extract")) extract_cifar();
-    else if(0==strcmp(argv[2], "distill")) train_cifar_distill(cfg, weights);
-    else if(0==strcmp(argv[2], "test")) test_cifar(cfg, weights);
-    else if(0==strcmp(argv[2], "multi")) test_cifar_multi(cfg, weights);
-    else if(0==strcmp(argv[2], "csv")) test_cifar_csv(cfg, weights);
-    else if(0==strcmp(argv[2], "csvtrain")) test_cifar_csvtrain(cfg, weights);
-    else if(0==strcmp(argv[2], "eval")) eval_cifar_csv();
-} */

@@ -10,7 +10,7 @@
 #include <time.h>
 /* For romulus */
 #define MAX_PATH FILENAME_MAX
-#define MAX_IMAGE 1
+// #define MAX_IMAGE 10
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 static int stack_val = 10;
@@ -39,6 +39,7 @@ char* IMAGENET_CFG_FILE = "";
 char* IMAGENET_TEST_DATA = "";
 char* IMAGENET_IMAGE = "";
 char* IMAGENET_WEIGHTS = "";
+int NUM_IMAGES = 0;
 
 // ./App/dnet-out/cfg/darknet19.cfg
 // ./App/dnet-out/data/imagenet.data
@@ -178,7 +179,7 @@ void test_imagenet(char *cfgfile)
     list *plist = get_paths(name_list);
 
     //read image file
-    image *im = (image *)calloc(MAX_IMAGE, sizeof(image));
+    image *im = (image *)calloc(NUM_IMAGES, sizeof(image));
 
 
     FILE * image_fp;
@@ -189,7 +190,7 @@ void test_imagenet(char *cfgfile)
     if (image_fp == NULL)
         exit(EXIT_FAILURE);
 
-    for (int i = 0; i < MAX_IMAGE; i++) {
+    for (int i = 0; i < NUM_IMAGES; i++) {
         if (getline(&line, &len, image_fp) == -1) {
             exit(1);
         }
@@ -206,16 +207,16 @@ void test_imagenet(char *cfgfile)
     printf("Enclave starts..\n");
     timespec start_tp;
     timespec end_tp;
-    int timestamp = clock_gettime(0, &start_tp);
+    int timestamp = clock_gettime(1, &start_tp);
     char *weights = (char*) malloc((256)*sizeof(char));
     strcpy(weights, IMAGENET_WEIGHTS);
     printf("%s\n", weights);
-    ecall_classify(global_eid, sections, plist, im, weights, MAX_IMAGE);
+    ecall_classify(global_eid, sections, plist, im, weights, NUM_IMAGES);
     printf("Enclave ends..\n");
-    timestamp = clock_gettime(0, &end_tp);
+    timestamp = clock_gettime(1, &end_tp);
     fprintf(stderr, "Run Time: %ld ms\n", ((end_tp.tv_sec-start_tp.tv_sec)  * (long)1e9 + (end_tp.tv_nsec-start_tp.tv_nsec)) / 1000000);
     //free data
-    for (int i = 0; i < MAX_IMAGE; i++) {
+    for (int i = 0; i < NUM_IMAGES; i++) {
         free_image(im[i]);
     }
     free(weights);
@@ -256,6 +257,7 @@ int SGX_CDECL main(int argc, char *argv[])
     IMAGENET_TEST_DATA = argv[2];
     IMAGENET_IMAGE = argv[3];
     IMAGENET_WEIGHTS = argv[4];
+    NUM_IMAGES = atoi(argv[5]);
     /* Initialize the enclave */
     timespec start_tp;
     timespec end_tp;
