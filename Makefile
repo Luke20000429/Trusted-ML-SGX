@@ -32,7 +32,7 @@
 ######## SGX SDK Settings ########
 
 SGX_SDK ?= /opt/intel/sgxsdk
-SGX_MODE ?= SIM
+SGX_MODE ?= HW
 SGX_PRERELEASE=1
 SGX_ARCH ?= x64
 SGX_COMMON_CFLAGS := -m64
