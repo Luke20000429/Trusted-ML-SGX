@@ -67,6 +67,7 @@ void fread(void *ptr, size_t size, size_t nmemb, int fp)
         printf("Error: fread failed\n");
     }
     if (plaintext_ptr >= plaintext_len) {
+        printf("Read done\n");
         free(plaintext);
         plaintext = NULL;
         plaintext_ptr = 0;
