@@ -42,3 +42,4 @@ app_batch
 *.tgz
 App/dnet-out/data/cifar/
 *.seal
+!tiny.seal
