@@ -24,18 +24,6 @@ data training_data, test_data;
 /**
  * Config files
  */
-#define CIFAR_CFG_FILE "./App/dnet-out/cfg/cifar.cfg"
-#define CIFAR_TEST_DATA "./App/dnet-out/data/cifar/cifar-10-batches-bin/test_batch.bin"
-#define TINY_IMAGE "./App/dnet-out/data/dog.jpg"
-// #define TINY_CFG "./App/dnet-out/cfg/tiny.cfg"
-#define TINY_CFG "./App/dnet-out/cfg/resnet152.cfg"
-// #define DATA_CFG "./App/dnet-out/data/tiny.data"
-#define DATA_CFG "./App/dnet-out/data/tiny.data"
-#define MNIST_TRAIN_IMAGES "./App/dnet-out/data/mnist/train-images-idx3-ubyte"
-#define MNIST_TRAIN_LABELS "./App/dnet-out/data/mnist/train-labels-idx1-ubyte"
-#define MNIST_TEST_IMAGES "./App/dnet-out/data/mnist/t10k-images-idx3-ubyte"
-#define MNIST_TEST_LABELS "./App/dnet-out/data/mnist/t10k-labels-idx1-ubyte"
-#define MNIST_CFG "./App/dnet-out/cfg/mnist.cfg"
 
 char* IMAGENET_CFG_FILE = "";
 char* IMAGENET_TEST_DATA = "";

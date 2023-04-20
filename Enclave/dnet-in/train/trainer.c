@@ -25,7 +25,7 @@ void ecall_classify(list *sections, list *labels, image *im, char *weights, int 
 void predict_classifier(list *sections, list *labels, image *img, int top, char *weights, int image_num)
 {
     if (net == NULL) {
-        printf("No neural network in enclave..\n");
+        printf("No neural network in enclave, loading..\n");
         printf("%s %d\n", weights, image_num);
         char *local_weights = (char *) calloc(256, sizeof(char));
         for (int i = 0; weights[i] != '\0'; ++i) {
@@ -62,7 +62,7 @@ void predict_classifier(list *sections, list *labels, image *img, int top, char 
 void predict_classifier_batch(list *sections, list *labels, image *imgs, int top, char *weights, int batch)
 {
     if (net == NULL) {
-        printf("No neural network in enclave..\n");
+        printf("No neural network in enclave, loading..\n");
         printf("%s %d\n", weights, batch);
         char *local_weights = (char *) calloc(256, sizeof(char));
         for (int i = 0; weights[i] != '\0'; ++i) {
